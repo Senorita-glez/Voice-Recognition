@@ -1,33 +1,51 @@
 function c = mfcc(s, fs)
-% MFCC Calculate the mel frequencey cepstrum coefficients (MFCC) of a signal
-%
+% MFCC Compute Mel-frequency cepstral coefficients
 % Inputs:
-%       s       : speech signal
-%       fs      : sample rate in Hz
-%
-% Outputs:
-%       c       : MFCC output, each column contains the MFCC's for one speech frame
+%   s  - señal de audio (vector)
+%   fs - frecuencia de muestreo
+% Output:
+%   c  - matriz [num_coeffs × num_frames]
 
-N = 256;                        % frame size
-M = 100;                        % inter frame distance
+N = 256;                      % Tamaño de ventana (frame size)
+M = 100;                      % Salto entre ventanas (hop size)
 len = length(s);
-numberOfFrames = 1 + floor((len - N)/double(M));
-mat = zeros(N, numberOfFrames); % vector of frame vectors
 
-for i=1:numberOfFrames
-    index = 100*(i-1) + 1;
-    for j=1:N
-        mat(j,i) = s(index);
-        index = index + 1;
-    end
+% ⚠️ Verificación mínima
+if len < N
+    c = [];
+    return;
 end
 
-hamW = hamming(N);              % hamming window
-afterWinMat = diag(hamW)*mat;   
-freqDomMat = fft(afterWinMat);  % FFT into freq domain
+numberOfFrames = 1 + floor((len - N) / M);
+mat = zeros(N, numberOfFrames);
 
-filterBankMat = melFilterBank(20, N, fs);                % matrix for a mel-spaced filterbank
+for i = 1:numberOfFrames
+    index = (i-1)*M + 1;
+    mat(:, i) = s(index:index+N-1);
+end
+
+hamW = hamming(N);
+afterWinMat = diag(hamW) * mat;
+
+% FFT
+freqDomMat = fft(afterWinMat);
 nby2 = 1 + floor(N/2);
-ms = filterBankMat*abs(freqDomMat(1:nby2,:)).^2; % mel spectrum
-c = dct(log(ms));                                % mel-frequency cepstrum coefficients
-c(1,:) = [];                                     % exclude 0'th order cepstral coefficient
+
+% Banco de filtros Mel
+filterBankMat = melFilterBank(20, N, fs);
+
+% Espectro en escala Mel
+ms = filterBankMat * abs(freqDomMat(1:nby2, :)).^2;
+
+% 🛡️ Prevenir log(0)
+ms(ms == 0) = 1e-10;
+
+% Cepstrum
+c = dct(log(ms));
+
+% Eliminar coeficiente 0
+c(1,:) = [];
+
+% 🧼 Eliminar columnas que contienen NaN (por seguridad)
+c(:, any(isnan(c), 1)) = [];
+end
