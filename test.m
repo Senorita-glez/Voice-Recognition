@@ -66,6 +66,6 @@ function test(test_dir, code)
         else
             fprintf('%s identificado como speaker %s (índice %d)\n', ...
                     files(i).name, speakers{predicted}, predicted);
-            endz
+        end
     end
 end
