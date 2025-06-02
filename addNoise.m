@@ -7,7 +7,7 @@ function s_noisy = addNoise(s, fs, noise_dir, snr_db)
     idx = randi(length(noise_files));
     noise_file = fullfile(noise_dir, noise_files(idx).name);
     [noise, fs_noise] = audioread(noise_file);
-    noise = mean(noise, 2); 
+    noise = mean(noise, 2);  % convertir a mono
 
     if fs ~= fs_noise
         noise = resample(noise, fs, fs_noise);

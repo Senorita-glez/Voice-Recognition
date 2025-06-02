@@ -18,6 +18,6 @@ function test(test_dir, code)
             end
         end
 
-        fprintf('%s identificado como speaker %d\n', files(i).name, predicted);
+        fprintf('%s identificado como speaker %d\\n', files(i).name, predicted);
     end
 end
