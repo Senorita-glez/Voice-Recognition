@@ -1,37 +1,23 @@
-function test(testdir, n, code)
-% Speaker Recognition: Testing Stage
-%
-% Input:
-%       testdir : string name of directory contains all test sound files
-%       n       : number of test files in testdir
-%       code    : codebooks of all trained speakers
-%
-% Note:
-%       Sound files in testdir is supposed to be: 
-%               s1.wav, s2.wav, ..., sn.wav
-%
-% Example:
-%       >> test('C:\data\test\', 8, code);
+function test(test_dir, code)
+    files = dir(fullfile(test_dir, '*.wav'));
 
-for k=1:n                       % read test sound file of each speaker
-    file = sprintf('%ss%d.wav', testdir, k);
-    [s, fs] = wavread(file);      
-        
-    v = mfcc(s, fs);            % Compute MFCC's
-   
-    distmin = inf;
-    k1 = 0;
-   
-    for l = 1:length(code)      % each trained codebook, compute distortion
-        d = distance(v, code{l}); 
-        dist = sum(min(d,[],2)) / size(d,1);
-      
-        if dist < distmin
-            distmin = dist;
-            k1 = l;
-        end      
+    for i = 1:length(files)
+        filepath = fullfile(test_dir, files(i).name);
+        [s, fs] = audioread(filepath);
+        v = mfcc(s, fs);
+
+        distmin = inf;
+        predicted = 0;
+
+        for j = 1:length(code)
+            d = distance(v, code{j});
+            dist = sum(min(d, [], 2)) / size(d, 1);
+            if dist < distmin
+                distmin = dist;
+                predicted = j;
+            end
+        end
+
+        fprintf('%s identificado como speaker %d\n', files(i).name, predicted);
     end
-   
-    msg = sprintf('Speaker %d matches with speaker %d', k, k1);
-    disp(msg);
 end
